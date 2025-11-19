@@ -3,7 +3,6 @@
     /*    Check if SVG and Font Awesome Icons have aria-hidden='true'    */
     /*********************************************************************/
     var $badIcons = [];
-    
     $("svg,.fa").each(function(){
         if($(this).attr("aria-hidden") !== "true"){
             $badIcons.push($(this).get(0));
@@ -54,7 +53,6 @@
     /*************************************************/
     var $badVideoPopButtons = [];
     var $badSemanticPopButtons = [];
-    
     $(".pop-open").each(function(){
         if( $(this).data("video") && !$(this).data("title") ){
             $badVideoPopButtons.push( $(this).get(0) );
@@ -75,26 +73,117 @@
         console.log($badSemanticPopButtons);
     }
 
+        
     /*************************************************************/
     /*   Popups - Make sure all popups have correct attributes   */
     /*************************************************************/
+    var $badPopups = [];
+    $(".pop-outer").each(function(){
+        var roleAttr   = $(this).attr("role");
+        var labelledBy = $(this).attr("aria-labelledby");
+        var label      = $(this).attr("aria-label");
+        
+        if(
+            !roleAttr || 
+            roleAttr != "dialog" ||
+            (!labelledBy && !label)
+        ){
+            $badPopups.push( $(this).get(0) );
+        } 
+    });
+
+    if($badPopups.length > 0){
+        console.log("Popup doesn't have proper attributes: ");
+        console.log($badPopups);
+    }
 
 
     /******************************************************************/
     /*   Links - Make sure all links on the page:                     */
     /*     1) Don't have "here" inside them to prevent vague links    */
-    /*     2) For links that open in a new tab, make sure they have   */
+    /*     2) Don't have a valid "href" attribute, that might         */
+    /*        indicate that this element should be a <button>         */ 
+    /*        instead.                                                */
+    /*     3) For links that open in a new tab, make sure they have   */
     /*        some manner of supplementary text announcing that to    */
     /*        the user                                                */
-    /*     3)                                                         */
     /******************************************************************/
+    var $vagueLinks = [];
+    var $linksThatShouldBeButtons = [];
+    var $newTabLinks = [];
+    $(".site-container a").each(function(){       
+        /****************************************************/
+        /*   Classify this as a vague link if it contains   */ 
+        /*   the text "here"                                */
+        /****************************************************/
+        if( 
+            $(this).text().indexOf(" here") !== -1
+        ){
+            $vagueLinks.push( $(this).get(0) );
+        }
+
+        /**************************************************/
+        /*   Check if links have a valid HREF attribute   */
+        /**************************************************/
+        if( 
+            !$(this).attr("href").startsWith("http://") &&
+            !$(this).attr("href").startsWith("https://") &&
+            !$(this).attr("href").startsWith("/") &&
+            !$(this).attr("href").startsWith("mailto:") &&
+            !$(this).attr("href").startsWith("tel:")
+        ){
+            $linksThatShouldBeButtons.push( $(this).get(0) );
+        }
+
+        /*************************************************************************************/
+        /*    Check if links that open in a new tab have one of the following:               */
+        /*      1) An aria-label mentioning a new tab                                        */
+        /*      2) An IMG within with an alt tag mentioning a new tab                        */
+        /*      3) If there is an element within that mentions a new tab                     */
+        /*************************************************************************************/
+        if( $(this).attr("target") == "_blank" ){
+            var ariaLabel = $(this).attr("aria-label");
+            var insideImg = $(this).find("img");
+            var insideText = $(this).find(".sr-only");
+
+            if( 
+                (!ariaLabel || ariaLabel.indexOf("new tab") == -1 ) && 
+                (!insideImg.attr("alt") || insideImg.attr("alt").indexOf("new tab") == -1 ) &&
+                (!insideText || insideText.text().indexOf("new tab") == -1) &&
+                $(this).attr("href").indexOf("mailto:") == -1 &&
+                $(this).attr("href").indexOf("tel:") == -1
+            ){
+                $newTabLinks.push( $(this).get(0) );
+            }
+        }
+    });
+
+    if($vagueLinks.length > 0){
+        console.log("Possible vague links found: ");
+        console.log($vagueLinks);
+    }
+
+    if($linksThatShouldBeButtons.length > 0){
+        console.log("Found links without valid HREF: ");
+        console.log($linksThatShouldBeButtons);
+    }
+
+    if($newTabLinks.length > 0){
+        console.log("Found links that open in a new tab without supplementary text: ");
+        console.log($newTabLinks);
+    }
+
 
     /**************************************************/
     /*   IMG - Output table of src,alt,width,height   */
     /**************************************************/
     var $badImages = [];
-
     $("img").each(function(){
+        // Ignore any IMG element without a src attribute 
+        if(!$(this).attr("src")){
+            return true;
+        }
+        
         if( !$(this).attr("alt") || !$(this).attr("width") || !$(this).attr("height") ){
             $badImages.push( {"src":$(this).attr("src"),"alt":$(this).attr("alt"),"width":$(this).attr("width"),"height":$(this).attr("height"),"el":$(this).get(0)} );
         } 
