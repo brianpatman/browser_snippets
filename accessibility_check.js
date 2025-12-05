@@ -4,7 +4,10 @@
     /*********************************************************************/
     var $badIcons = [];
     $("svg,.fa").each(function(){
-        if($(this).attr("aria-hidden") !== "true"){
+        // Added a special condition - WordPress has an SVG icon on the <button>
+        // element on lightboxes that isn't hidden from users by default for some reason
+        //
+        if( $(this).attr("aria-hidden") !== "true" && !$(this).parent().is(".lightbox-trigger") ){
             $badIcons.push($(this).get(0));
         }
     });
@@ -38,6 +41,12 @@
             $badLightboxLinks.push( $(this).get(0) );       
        } 
     });
+
+    $(".pop-open").each(function(){
+        if($(this).is("a")){
+            $badLightboxLinks.push( $(this).get(0) );
+        }
+    })
 
     if($badLightboxLinks.length > 0){
         console.log("Found Lightbox Links that are <a> tags instead of <button> tags: ");
@@ -111,7 +120,8 @@
     var $vagueLinks = [];
     var $linksThatShouldBeButtons = [];
     var $newTabLinks = [];
-    $(".site-container a").each(function(){       
+    
+    $(".site-container a").each(function(){
         /****************************************************/
         /*   Classify this as a vague link if it contains   */ 
         /*   the text "here"                                */
@@ -142,8 +152,8 @@
         /*      3) If there is an element within that mentions a new tab                     */
         /*************************************************************************************/
         if( $(this).attr("target") == "_blank" ){
-            var ariaLabel = $(this).attr("aria-label");
-            var insideImg = $(this).find("img");
+            var ariaLabel  = $(this).attr("aria-label");
+            var insideImg  = $(this).find("img");
             var insideText = $(this).find(".sr-only");
 
             if( 
@@ -173,6 +183,40 @@
         console.log($newTabLinks);
     }
 
+    /*************************************************************/
+    /*   All <input> elements have a single associated <label>   */
+    /*************************************************************/
+    var $badInputs = [];
+    var $inputsMultipleLabels = [];
+    
+    $("input").each(function(){
+        var $inputID = $(this).attr("id");
+        var $inputType = $(this).attr("type");
+        var $associatedLabels = $("label[for='" + $inputID + "']");
+
+        if($inputType == "submit" || $inputType == "button" || $inputType == "hidden"){
+            return;
+        }
+
+        if( $associatedLabels.length == 0){
+            $badInputs.push( $(this).get(0) );
+        }
+
+        if( $associatedLabels.length > 1 ){
+            $inputsMultipleLabels.push( $(this).get(0) );
+        }
+    });
+
+    if($badInputs.length > 0){
+        console.log("Found <input> elements without an associated <label>: ");
+        console.log($badInputs);
+    }
+
+    if($inputsMultipleLabels.length > 0){
+        console.log("Found <input> elements with multiple associated <label> elements: ");
+        console.log($inputsMultipleLabels);
+    }
+        
 
     /**************************************************/
     /*   IMG - Output table of src,alt,width,height   */
@@ -185,7 +229,13 @@
         }
         
         if( !$(this).attr("alt") || !$(this).attr("width") || !$(this).attr("height") ){
-            $badImages.push( {"src":$(this).attr("src"),"alt":$(this).attr("alt"),"width":$(this).attr("width"),"height":$(this).attr("height"),"el":$(this).get(0)} );
+            $badImages.push({
+                "src":    $(this).attr("src"),
+                "alt":    $(this).attr("alt"),
+                "width":  $(this).attr("width"),
+                "height": $(this).attr("height"),
+                "el":     $(this).get(0)
+            });
         } 
     });
 
