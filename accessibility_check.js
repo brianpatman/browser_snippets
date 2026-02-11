@@ -1,4 +1,5 @@
 (function($){
+    console.clear();
     /*********************************************************************/
     /*    Check if SVG and Font Awesome Icons have aria-hidden='true'    */
     /*********************************************************************/
@@ -198,7 +199,7 @@
             return;
         }
 
-        if( $associatedLabels.length == 0){
+        if( $associatedLabels.length == 0 ){
             $badInputs.push( $(this).get(0) );
         }
 
@@ -216,7 +217,47 @@
         console.log("Found <input> elements with multiple associated <label> elements: ");
         console.log($inputsMultipleLabels);
     }
+
+
+    /***********************************************************************/
+    /* Tablist - Check that all expected attributes in a tablist are there */
+    /***********************************************************************/
+     // role
+	//     tablist
+	//     tabpanel
+	// 	      aria-labelledby -> cooresponding tab
+	//     tab
+	// 	      aria-controls -> cooresponding tabpanel
+	// 	      aria-selected -> true/false
         
+    var $badTabs = [];
+    if( $("[role='tablist']").length || $("[role='tabpanel']").length || $("[role='tab']").length ){
+        // We've got a tab system on the page!!
+
+		$("[role='tabpanel']").each(function(){
+			var labelledBy = $(this).attr("aria-labelledby");
+			var $tab = $("#" + labelledBy);
+
+			if( $tab.length == 0 || $tab.attr("role") != "tab" ){
+				$badTabs.push( $(this).get(0) );
+			}
+		});
+
+		$("[role='tab']").each(function(){
+			var ariaSelected = $(this).attr("aria-selected");
+			var ariaControls = $(this).attr("aria-controls");
+			var $tabpanel = $("#" + ariaControls);
+
+			if( $tabpanel.length == 0 || !ariaSelected || $tabpanel.attr("role") != "tabpanel" ){
+				$badTabs.push( $(this).get(0) );
+			}
+		});
+    }
+
+	if($badTabs.length > 0){
+		console.log("Found problematic tab components: ");
+		console.log($badTabs);
+	}
 
     /**************************************************/
     /*   IMG - Output table of src,alt,width,height   */
