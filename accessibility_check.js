@@ -120,6 +120,7 @@
     /******************************************************************/
     var $vagueLinks = [];
     var $linksThatShouldBeButtons = [];
+	var $emptyLinks = [];
     var $newTabLinks = [];
     
     $(".site-container a").each(function(){
@@ -145,6 +146,20 @@
         ){
             $linksThatShouldBeButtons.push( $(this).get(0) );
         }
+
+		/*********************************************/
+		/* Check if links are "empty" (lacking text) */
+		/*********************************************/
+		var innerImgAlt = $(this).find("img").attr('alt');
+		var ariaLabel   = $(this).attr("aria-label");
+		
+		if( 
+			!$(this).text().trim() && 
+			!(innerImgAlt && innerImgAlt.trim().length > 0) &&
+			!ariaLabel
+		){
+			$emptyLinks.push( $(this).get(0) );
+		}
 
         /*************************************************************************************/
         /*    Check if links that open in a new tab have one of the following:               */
@@ -178,6 +193,11 @@
         console.log("Found links without valid HREF: ");
         console.log($linksThatShouldBeButtons);
     }
+
+	if($emptyLinks.length > 0){
+		console.log("Found links that are empty. Maybe add some text for screen readers?: ");
+		console.log($emptyLinks);
+	}
 
     if($newTabLinks.length > 0){
         console.log("Found links that open in a new tab without supplementary text: ");
