@@ -1,14 +1,16 @@
 (function($){
     console.clear();
     /*********************************************************************/
-    /*    Check if SVG and Font Awesome Icons have aria-hidden='true'    */
+    /*    Check if SVG and Font Awesome Icons are either hidden          */
+	/*    (with aria-hidden="true") or, with SVGs, that they have        */
+	/*    some manner of aria-label or aria-labelledby attribute.        */
     /*********************************************************************/
     var $badIcons = [];
     $("svg,.fa").each(function(){
-        // Added a special condition - WordPress has an SVG icon on the <button>
-        // element on lightboxes that isn't hidden from users by default for some reason
-        //
-        if( $(this).attr("aria-hidden") !== "true" && !$(this).parent().is(".lightbox-trigger") ){
+		if(
+			$(this).attr("aria-hidden") !== "true" &&
+			( $(this).is("svg") && !$(this).attr('aria-labelledby') && !$(this).attr("aria-label") )
+		){
             $badIcons.push($(this).get(0));
         }
     });
@@ -17,6 +19,30 @@
         console.log("Found Icons without aria-hidden:");
         console.log($badIcons);
     }
+
+
+	/***********************************************************/
+	/*   Headers - Check if there are multiple <h1> elements   */
+	/***********************************************************/
+	var h1Elements = $("h1");
+
+	if(h1Elements.length > 1){
+		console.log("Found Multiple <h1> elements: ");
+		console.log( document.querySelectorAll("h1") );
+	}
+
+	/***********************************************************/
+	/*    Headers - Check if there are out-of-order headers    */
+	/***********************************************************/
+	/*    UserWay puts this attribute on headers that it       */
+	/*    judges to be out of order; pretty good indication    */
+	/***********************************************************/
+	var $oooHeaderElements = $("[data-uw-rm-heading='level']");
+
+	if($oooHeaderElements.length > 0){
+		console.log("Found Out-of-Order Headers: ");
+		console.log( $oooHeaderElements );
+	}
 
     /*******************************************************/
     /*   IFrames - Make sure they have a title attribute   */
@@ -107,6 +133,30 @@
         console.log($badPopups);
     }
 
+
+	/***************************************************************/
+    /*   Buttons - Make sure all buttons have an accessible name   */
+    /***************************************************************/
+	var $emptyButtons = [];
+
+	$(".site-container button").each(function(){
+		var innerImgAlt = $(this).find("img").attr('alt');
+		var ariaLabel   = $(this).attr("aria-label");
+
+		if( 
+			!$(this).text().trim() && 
+			!(innerImgAlt && innerImgAlt.trim().length > 0) &&
+			!ariaLabel
+		){
+			$emptyButtons.push( $(this).get(0) );
+		}
+	});
+
+	if($emptyButtons.length > 0){
+		console.log("Found buttons without appropriate text: ");
+		console.log($emptyButtons);
+	}
+		
 
     /******************************************************************/
     /*   Links - Make sure all links on the page:                     */
